@@ -45,6 +45,7 @@ Run every script from the repository's top folder. Intermediate files (`data/*.p
 | 5a | `python robust.py time` | `results_step5_time.csv` | Section 5.4, Figure 5 |
 | 5b | `python robust.py loco`, then `python check_step5.py` | `results_step5_loco.csv` | Section 5.5, Figure 6 |
 | 5c | `python salinas.py` (needs the retired-cell files, see `data/README.md`) | `results_step5_salinas.csv`, `results_step5_salinas_clf.csv` | Section 5.6, Table 5 |
+| 5d | `python coldstart.py` | `results_coldstart.csv` | Section 5.5 (cold start: cells or measurements) |
 | 6 | `python case_study.py` | `results_case_study.json` | Sections 4.7 and 5.3, Table 4, Figure 4 |
 | 7 | `python figures.py` | `figures/` | Figures 2 to 6 |
 | 8 | `python export_demo.py` | `demo/model.json` (then rebuild the page from `demo/template.html`) | Section 4.9 |
