@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Battery Data Shrinker</title>
+<style>
+  :root { --bg:#f7f7f5; --card:#ffffff; --ink:#1f1f1c; --muted:#6b6b66; --line:#e2e1dc; --accent:#2f6fde; --ok:#2e7d4f; --err:#b3261e; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1b1b19; --card:#252523; --ink:#ecebe6; --muted:#a3a29c; --line:#3a3a37; --accent:#6ea0ff; --ok:#6fcf97; --err:#ff8a80; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width:720px; margin:40px auto; padding:0 16px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 24px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px; margin-bottom:16px; }
+  .step { font-weight:600; margin-bottom:8px; }
+  .hint { color:var(--muted); font-size:13.5px; margin:8px 0 0; }
+  label.btn, button { display:inline-block; background:var(--accent); color:#fff; border:0; border-radius:8px; padding:10px 18px; font:inherit; font-weight:600; cursor:pointer; }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  input[type=file] { display:none; }
+  .bar { height:10px; background:var(--line); border-radius:6px; overflow:hidden; margin:12px 0 6px; }
+  .bar > div { height:100%; width:0; background:var(--accent); transition:width .2s; }
+  #status { font-variant-numeric:tabular-nums; }
+  table { width:100%; border-collapse:collapse; margin-top:12px; font-variant-numeric:tabular-nums; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
+  th { color:var(--muted); font-weight:500; font-size:13px; }
+  .ok { color:var(--ok); font-weight:600; }
+  .err { color:var(--err); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Battery Data Shrinker</h1>
+  <p class="sub">Keeps only what the triage model needs from the Zhu et al. 2022 files: the voltage while the battery rests after each charge, and the capacity of the discharge that follows. Everything runs on this computer; nothing is uploaded.</p>
+
+  <div class="card">
+    <div class="step">Step 1 &middot; Choose the battery_data folder</div>
+    <label class="btn" for="pick">Choose folder</label>
+    <input id="pick" type="file" webkitdirectory directory multiple>
+    <p class="hint">Your browser may ask whether to "upload" the files to this page. Click <b>Upload</b>: the page only reads them here, on your computer.</p>
+    <div class="bar"><div id="fill"></div></div>
+    <div id="status">Waiting for a folder&hellip;</div>
+    <table id="summary" hidden><thead><tr><th>Folder</th><th>Files</th><th>Cycles kept</th></tr></thead><tbody></tbody></table>
+  </div>
+
+  <div class="card">
+    <div class="step">Step 2 &middot; Save the result</div>
+    <button id="save" disabled>Save result</button>
+    <p class="hint">Save it inside the <b>battery_data</b> folder (C:\Users\tebrd\battery_data). The file is called <b id="fname">zhu_relaxation_extract.csv.gz</b>.</p>
+    <div id="saved"></div>
+  </div>
+</main>
+<script>
+/*CORE*/
+
+const pick = document.getElementById('pick');
+const fill = document.getElementById('fill');
+const statusEl = document.getElementById('status');
+const saveBtn = document.getElementById('save');
+const tbody = document.querySelector('#summary tbody');
+let resultBlob = null;
+let resultName = 'zhu_relaxation_extract.csv.gz';
+
+async function processFiles(fileList) {
+  const files = [...fileList].filter(f => f.name.toLowerCase().endsWith('.csv') && !f.name.startsWith('zhu_'))
+    .sort((a, b) => (a.webkitRelativePath || a.name).localeCompare(b.webkitRelativePath || b.name));
+  if (!files.length) { statusEl.innerHTML = '<span class="err">No CSV files found in that folder.</span>'; return; }
+  const total = files.reduce((s, f) => s + f.size, 0);
+  let done = 0;
+  const lines = [HEADER];
+  const per = {};
+  const t0 = performance.now();
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+    const parts = (f.webkitRelativePath || f.name).split('/');
+    const ds = parts.length > 1 ? parts[parts.length - 2] : 'unknown';
+    const cell = f.name.replace(/\.csv$/i, '');
+    per[ds] = per[ds] || { files: 0, cycles: 0 };
+    const before = lines.length;
+    const ex = makeExtractor(ds, cell, l => lines.push(l));
+    const reader = f.stream().pipeThrough(new TextDecoderStream()).getReader();
+    let fileDone = 0;
+    for (;;) {
+      const { value, done: end } = await reader.read();
+      if (end) break;
+      ex.push(value);
+      fileDone += value.length;
+      const frac = (done + Math.min(fileDone, f.size)) / total;
+      fill.style.width = (100 * frac).toFixed(1) + '%';
+      statusEl.textContent = `File ${i + 1} of ${files.length}: ${ds}/${cell}  (${(100 * frac).toFixed(0)}%)`;
+    }
+    ex.end();
+    done += f.size;
+    per[ds].files += 1;
+    per[ds].cycles += lines.length - before;
+  }
+  fill.style.width = '100%';
+  const text = lines.join('\n') + '\n';
+  if (typeof CompressionStream !== 'undefined') {
+    resultBlob = await new Response(new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'))).blob();
+  } else {
+    resultBlob = new Blob([text], { type: 'text/csv' });
+    resultName = 'zhu_relaxation_extract.csv';
+    document.getElementById('fname').textContent = resultName;
+  }
+  window.__result = { blob: resultBlob, name: resultName, cycles: lines.length - 1 };
+  const secs = ((performance.now() - t0) / 1000).toFixed(0);
+  statusEl.innerHTML = `<span class="ok">Done.</span> ${files.length} files read in ${secs} s; ${lines.length - 1} cycles kept; result ${resultBlob.size >= 1e6 ? (resultBlob.size / 1e6).toFixed(1) + ' MB' : Math.max(1, Math.round(resultBlob.size / 1e3)) + ' KB'}.`;
+  tbody.innerHTML = Object.entries(per).map(([d, v]) => `<tr><td>${d}</td><td>${v.files}</td><td>${v.cycles}</td></tr>`).join('');
+  document.getElementById('summary').hidden = false;
+  saveBtn.disabled = false;
+}
+
+async function saveResult() {
+  if (!resultBlob) return;
+  const saved = document.getElementById('saved');
+  if (window.showSaveFilePicker) {
+    try {
+      const h = await window.showSaveFilePicker({ suggestedName: resultName });
+      const w = await h.createWritable();
+      await w.write(resultBlob);
+      await w.close();
+      saved.innerHTML = `<p class="ok">Saved as ${h.name}.</p>`;
+      return;
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+    }
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(resultBlob);
+  a.download = resultName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  saved.innerHTML = '<p class="hint">Downloaded to your Downloads folder. Move it into battery_data.</p>';
+}
+
+pick.addEventListener('change', () => {
+  saveBtn.disabled = true;
+  processFiles(pick.files).catch(e => { statusEl.innerHTML = `<span class="err">Error: ${e.message}</span>`; });
+});
+saveBtn.addEventListener('click', saveResult);
+</script>
+</body>
+</html>

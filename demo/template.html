@@ -1,0 +1,262 @@
+<title>Battery Triage Bench</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600&display=swap">
+<style>
+  /* Layout: a test bench - readings on the left, the verdict on the right; stacks on phones. */
+  :root {
+    --bg: #f4f5f3; --panel: #ffffff; --ink: #16191a; --muted: #5d6463; --line: #dfe2df;
+    --accent: #1f6f8b; --accent-soft: #e3eff3;
+    --life: #2e7d4f; --life-soft: #e4f2e9; --recycle: #b4561d; --recycle-soft: #f8e9df; --retest: #1f6f8b; --retest-soft: #e3eff3;
+    --warn: #8a5a00; --warn-soft: #fbf1d9; --curve: #1f6f8b; --threshold: #b4561d;
+    --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #131617; --panel: #1b1f20; --ink: #e9ecea; --muted: #a2aaa8; --line: #2e3436;
+    --accent: #5fb3d0; --accent-soft: #1d3540; --life: #6cc58f; --life-soft: #1c3326; --recycle: #e58a52; --recycle-soft: #3a2519;
+    --retest: #5fb3d0; --retest-soft: #1d3540; --warn: #e2b450; --warn-soft: #3a2f16; --curve: #5fb3d0; --threshold: #e58a52; color-scheme: dark; } }
+  :root[data-theme="dark"] {
+    --bg: #131617; --panel: #1b1f20; --ink: #e9ecea; --muted: #a2aaa8; --line: #2e3436;
+    --accent: #5fb3d0; --accent-soft: #1d3540; --life: #6cc58f; --life-soft: #1c3326; --recycle: #e58a52; --recycle-soft: #3a2519;
+    --retest: #5fb3d0; --retest-soft: #1d3540; --warn: #e2b450; --warn-soft: #3a2f16; --curve: #5fb3d0; --threshold: #e58a52; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); }
+  .wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  header { display: grid; gap: 6px; margin-bottom: 20px; }
+  .eyebrow { font: 500 12px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  h1 { font: 600 clamp(26px, 4vw, 34px)/1.1 var(--f-display); margin: 0; text-wrap: balance; }
+  .lede { color: var(--muted); max-width: 68ch; margin: 0; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 820px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 16px; min-width: 0; }
+  h2 { font: 600 13px/1.2 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .field { display: grid; gap: 8px; }
+  .seg { display: flex; flex-wrap: wrap; gap: 6px; }
+  .seg button, .chip { font: 500 13.5px/1 var(--f-body); border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--panel); }
+  .chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .readings { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+  .reading { display: grid; gap: 3px; }
+  .reading label { font: 12px/1.2 var(--f-mono); color: var(--muted); }
+  .reading input { width: 100%; font: 500 15px/1 var(--f-mono); font-variant-numeric: tabular-nums; padding: 8px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); }
+  .hint { font-size: 13px; color: var(--muted); margin: 0; }
+  details { border-top: 1px solid var(--line); padding-top: 12px; }
+  summary { cursor: pointer; font-weight: 500; }
+  textarea { width: 100%; min-height: 96px; font: 13px/1.4 var(--f-mono); padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--ink); margin-top: 8px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .btn { font: 500 13.5px/1 var(--f-body); border: 1px solid var(--accent); color: var(--accent); background: transparent; border-radius: 6px; padding: 8px 12px; cursor: pointer; }
+  .slider { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; }
+  .slider label { font-size: 14px; }
+  .slider output { font: 500 14px var(--f-mono); font-variant-numeric: tabular-nums; }
+  .slider input { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); }
+  svg text { fill: var(--muted); font: 11px var(--f-mono); }
+  .verdict { border-radius: 10px; padding: 16px; display: grid; gap: 6px; border: 1px solid var(--line); }
+  .verdict[data-a="second life"] { background: var(--life-soft); border-color: var(--life); }
+  .verdict[data-a="recycle"] { background: var(--recycle-soft); border-color: var(--recycle); }
+  .verdict[data-a="retest"] { background: var(--retest-soft); border-color: var(--retest); }
+  .verdict .label { font: 500 12px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .verdict .action { font: 600 30px/1.1 var(--f-display); }
+  .verdict[data-a="second life"] .action { color: var(--life); }
+  .verdict[data-a="recycle"] .action { color: var(--recycle); }
+  .verdict[data-a="retest"] .action { color: var(--retest); }
+  .why { margin: 0; font-size: 14px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 10px; }
+  .stat { display: grid; gap: 2px; }
+  .stat .k { font: 12px var(--f-mono); color: var(--muted); }
+  .stat .v { font: 500 20px var(--f-mono); font-variant-numeric: tabular-nums; }
+  .costs { display: grid; gap: 8px; }
+  .cost { display: grid; grid-template-columns: 96px minmax(0, 1fr) 52px; gap: 10px; align-items: center; font-size: 14px; }
+  .cost .bar { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
+  .cost .bar span { display: block; height: 100%; border-radius: 5px; background: var(--muted); }
+  .cost[data-best="1"] .bar span { background: var(--accent); }
+  .cost[data-best="1"] { font-weight: 600; }
+  .cost .n { font: 500 13.5px var(--f-mono); text-align: right; font-variant-numeric: tabular-nums; }
+  .note { background: var(--warn-soft); color: var(--ink); border-left: 3px solid var(--warn); padding: 10px 12px; border-radius: 4px; font-size: 14px; }
+  .truth { font: 13px var(--f-mono); color: var(--muted); }
+  footer { margin-top: 18px; color: var(--muted); font-size: 13px; display: grid; gap: 6px; max-width: 90ch; }
+  @media (prefers-reduced-motion: no-preference) { .cost .bar span { transition: width .25s ease; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">End-of-life triage &middot; no passport data</div>
+    <h1>Battery Triage Bench</h1>
+    <p class="lede">Enter the cell voltage during the rest after a full charge. The model estimates state of health (SoH) with a calibrated 90% range, then picks second life, recycling or a full capacity retest, whichever has the lowest expected cost.</p>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="h-in">
+      <h2 id="h-in">Readings</h2>
+      <div class="field">
+        <span class="hint">Chemistry (the model is trained per chemistry)</span>
+        <div class="seg" id="chem" role="group" aria-label="Chemistry"></div>
+      </div>
+      <div class="field">
+        <span class="hint">Example cells, held out of training (true SoH known)</span>
+        <div class="seg" id="examples"></div>
+      </div>
+      <div class="field">
+        <span class="hint">Rest voltage (V) after the charge ends, at minute:</span>
+        <div class="readings" id="readings"></div>
+      </div>
+      <svg id="curve" viewBox="0 0 520 170" role="img" aria-label="Rest voltage curve" style="width:100%;height:auto"></svg>
+      <details>
+        <summary>Paste a logged rest curve</summary>
+        <p class="hint">One reading per line: minutes since the charge ended, then volts, for example <code>0, 4.1912</code>. The tool reads the voltage at 0, 2, 4, 6, 10, 16 and 26 min by interpolation; the log must cover 0 to 26 min.</p>
+        <textarea id="paste" aria-label="Logged rest curve"></textarea>
+        <div class="row"><button class="btn" id="usePaste" type="button">Use these readings</button><span class="hint" id="pasteMsg"></span></div>
+      </details>
+      <div class="field">
+        <h2>Costs, in full capacity tests</h2>
+        <div class="slider"><label for="cfn">Eligible battery sent to recycling</label><output id="cfnOut"></output><input id="cfn" type="range" min="1" max="20" step="1" value="5"></div>
+        <div class="slider"><label for="cfp">Unsuitable battery sent to second life</label><output id="cfpOut"></output><input id="cfp" type="range" min="1" max="60" step="1" value="20"></div>
+        <p class="hint">A retest costs 1. The defaults (5 and 20) are illustrative, not measured.</p>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-out" aria-live="polite">
+      <h2 id="h-out">Verdict</h2>
+      <div class="verdict" id="verdict"><span class="label">Route this battery to</span><span class="action" id="action">&nbsp;</span><p class="why" id="why"></p></div>
+      <div class="stats">
+        <div class="stat"><span class="k">SoH estimate</span><span class="v" id="soh">&nbsp;</span></div>
+        <div class="stat"><span class="k">90% range</span><span class="v" id="range">&nbsp;</span></div>
+        <div class="stat"><span class="k">P(SoH &ge; 80%)</span><span class="v" id="prob">&nbsp;</span></div>
+      </div>
+      <svg id="gauge" viewBox="0 0 520 64" role="img" aria-label="SoH estimate with range" style="width:100%;height:auto"></svg>
+      <div class="truth" id="truth"></div>
+      <div>
+        <h2 style="margin-bottom:8px">Expected cost of each action</h2>
+        <div class="costs" id="costs"></div>
+      </div>
+      <div class="note" id="note" hidden></div>
+    </section>
+  </div>
+
+  <footer>
+    <div>Gaussian process per chemistry, trained on lab-aged 18650 cells from Zhu et al. (2022, Nature Communications; data CC BY 4.0), with SoH measured against rated capacity and the 90% range calibrated on held-out cells. In tests on unseen cells, the SoH error was about 0.8&ndash;1.1 points for a 26-minute rest.</div>
+    <div>Research prototype for the ML triage study. For a chemistry not listed here, retest every battery until at least four cells of it have been fully tested (decision D-16). The rest only counts after a full charge, so the test still needs a charge.</div>
+  </footer>
+</div>
+
+<script type="application/json" id="model">/*MODEL*/</script>
+<script>
+/*PREDICT*/
+
+const M = JSON.parse(document.getElementById('model').textContent);
+const TIMES = M.times_min, THR = M.threshold;
+const chemNames = Object.keys(M.models);
+let chem = chemNames[0], exampleIdx = 2, volts = M.models[chem].examples[exampleIdx].volts.slice(), truth = M.models[chem].examples[exampleIdx];
+const $ = id => document.getElementById(id);
+const fmt = (x, d = 1) => x.toFixed(d);
+
+function buildChem() {
+  $('chem').innerHTML = '';
+  for (const c of chemNames) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = c; b.setAttribute('aria-pressed', String(c === chem));
+    b.onclick = () => { chem = c; loadExample(2); buildChem(); };
+    $('chem').appendChild(b);
+  }
+}
+function buildExamples() {
+  const ex = M.models[chem].examples;
+  $('examples').innerHTML = '';
+  ex.forEach((e, i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.textContent = `SoH ${fmt(e.true_soh)}%`;
+    b.title = e.label; b.setAttribute('aria-pressed', String(truth && i === exampleIdx));
+    b.onclick = () => loadExample(i);
+    $('examples').appendChild(b);
+  });
+}
+function buildReadings() {
+  $('readings').innerHTML = '';
+  TIMES.forEach((t, i) => {
+    const d = document.createElement('div'); d.className = 'reading';
+    const id = 'v' + i;
+    d.innerHTML = `<label for="${id}">${t} min</label><input id="${id}" inputmode="decimal" type="number" step="0.0001" value="${volts[i].toFixed(4)}">`;
+    d.querySelector('input').addEventListener('input', ev => {
+      const v = parseFloat(ev.target.value);
+      if (Number.isFinite(v)) { volts[i] = v; truth = null; buildExamples(); update(); }
+    });
+    $('readings').appendChild(d);
+  });
+}
+function loadExample(i) {
+  exampleIdx = i; truth = M.models[chem].examples[i]; volts = truth.volts.slice();
+  buildExamples(); buildReadings(); update();
+}
+
+function drawCurve() {
+  const W = 520, H = 170, L = 52, R = 14, T = 12, B = 30;
+  const vmin = Math.min(...volts), vmax = Math.max(...volts);
+  const pad = Math.max(0.002, (vmax - vmin) * 0.15), lo = vmin - pad, hi = vmax + pad;
+  const X = t => L + (t / 26) * (W - L - R), Y = v => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  let s = '';
+  for (let k = 0; k <= 3; k++) {
+    const v = lo + (k / 3) * (hi - lo);
+    s += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/>`;
+    s += `<text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end">${v.toFixed(3)}</text>`;
+  }
+  for (const t of TIMES) s += `<text x="${X(t)}" y="${H - 10}" text-anchor="middle">${t}</text>`;
+  s += `<text x="${W - R}" y="${H - 10 - 14}" text-anchor="end">min</text>`;
+  s += `<polyline fill="none" stroke="var(--curve)" stroke-width="2" points="${TIMES.map((t, i) => X(t) + ',' + Y(volts[i])).join(' ')}"/>`;
+  for (let i = 0; i < TIMES.length; i++) s += `<circle cx="${X(TIMES[i])}" cy="${Y(volts[i])}" r="4" fill="var(--panel)" stroke="var(--curve)" stroke-width="2"><title>${TIMES[i]} min: ${volts[i].toFixed(4)} V</title></circle>`;
+  $('curve').innerHTML = s;
+}
+
+function drawGauge(pred, d) {
+  const W = 520, L = 10, R = 10, lo = 60, hi = 100, X = v => L + (Math.min(hi, Math.max(lo, v)) - lo) / (hi - lo) * (W - L - R);
+  let s = `<rect x="${L}" y="22" width="${W - L - R}" height="10" rx="5" fill="var(--line)"/>`;
+  s += `<rect x="${X(d.lo)}" y="22" width="${Math.max(2, X(d.hi) - X(d.lo))}" height="10" rx="5" fill="var(--accent)" opacity="0.35"/>`;
+  s += `<line x1="${X(THR)}" x2="${X(THR)}" y1="12" y2="42" stroke="var(--threshold)" stroke-width="2"/>`;
+  s += `<text x="${X(THR)}" y="9" text-anchor="middle" style="fill:var(--threshold)">80% threshold</text>`;
+  s += `<circle cx="${X(pred.soh)}" cy="27" r="6" fill="var(--accent)" stroke="var(--panel)" stroke-width="2"><title>Estimate ${pred.soh.toFixed(1)}%</title></circle>`;
+  if (truth) s += `<path d="M${X(truth.true_soh) - 5} 44 L${X(truth.true_soh) + 5} 44 L${X(truth.true_soh)} 37 Z" fill="var(--ink)"><title>True SoH ${truth.true_soh}%</title></path>`;
+  for (const v of [60, 70, 80, 90, 100]) s += `<text x="${X(v)}" y="58" text-anchor="middle">${v}</text>`;
+  $('gauge').innerHTML = s;
+}
+
+function update() {
+  const cFN = +$('cfn').value, cFP = +$('cfp').value;
+  $('cfnOut').textContent = cFN; $('cfpOut').textContent = cFP;
+  const m = M.models[chem];
+  const pred = gpPredict(m, volts), d = decide(pred, THR, cFN, cFP);
+  $('verdict').dataset.a = d.action;
+  $('action').textContent = d.action === 'second life' ? 'Second life' : d.action === 'recycle' ? 'Recycling' : 'Full retest';
+  $('why').textContent = d.action === 'retest'
+    ? `The estimate is too close to 80% to route safely at these costs: a full capacity test (cost 1) is cheaper than the expected cost of guessing.`
+    : d.action === 'second life'
+      ? `The battery is very likely above 80%; sending it to second life has the lowest expected cost.`
+      : `The battery is very likely below 80%; recycling has the lowest expected cost.`;
+  $('soh').textContent = fmt(pred.soh) + '%';
+  $('range').textContent = `${fmt(d.lo)}\u2013${fmt(d.hi)}`;
+  $('prob').textContent = d.p < 0.001 ? '<0.001' : d.p > 0.999 ? '>0.999' : d.p.toFixed(3);
+  $('truth').textContent = truth ? `Example ${truth.label}: true SoH ${fmt(truth.true_soh, 2)}% (measured by a full discharge).` : 'Your readings (true SoH unknown).';
+  const maxc = Math.max(1, ...Object.values(d.costs));
+  $('costs').innerHTML = ['second life', 'recycle', 'retest'].map(a => {
+    const v = d.costs[a];
+    const name = a === 'second life' ? 'Second life' : a === 'recycle' ? 'Recycle' : 'Retest';
+    return `<div class="cost" data-best="${a === d.action ? 1 : 0}"><span>${name}</span><span class="bar"><span style="width:${Math.max(1, 100 * v / maxc)}%"></span></span><span class="n">${v.toFixed(2)}</span></div>`;
+  }).join('');
+  const off = pred.zmax > 4;
+  $('note').hidden = !off;
+  if (off) $('note').textContent = 'These readings are far outside the training data for this chemistry, so the estimate is unreliable. Retest the battery and check the chemistry and the units (volts).';
+  drawCurve(); drawGauge(pred, d);
+}
+
+$('cfn').addEventListener('input', update);
+$('cfp').addEventListener('input', update);
+$('usePaste').addEventListener('click', () => {
+  const pts = $('paste').value.split(/\n+/).map(l => l.split(/[,;\s\t]+/).filter(Boolean).map(Number)).filter(p => p.length >= 2 && p.every(Number.isFinite)).sort((a, b) => a[0] - b[0]);
+  if (pts.length < 3 || pts[0][0] > 0.01 || pts[pts.length - 1][0] < 26) { $('pasteMsg').textContent = 'Need at least 3 readings covering 0 to 26 min.'; return; }
+  const interp = t => { for (let i = 1; i < pts.length; i++) if (pts[i][0] >= t) { const [t0, v0] = pts[i - 1], [t1, v1] = pts[i]; return t1 === t0 ? v1 : v0 + (v1 - v0) * (t - t0) / (t1 - t0); } return pts[pts.length - 1][1]; };
+  volts = TIMES.map(interp); truth = null; buildExamples(); buildReadings(); update();
+  $('pasteMsg').textContent = `Read ${pts.length} points.`;
+});
+buildChem(); loadExample(2);
+</script>

@@ -1,0 +1,23 @@
+D1 fold 0: train cells 51 (1272 cycles), test cells 15 (4856 cycles), 36 s
+/usr/local/lib/python3.13/site-packages/sklearn/gaussian_process/kernels.py:455: ConvergenceWarning: The optimal value found for dimension 4 of parameter k1__k2__length_scale is close to the specified upper bound 100000.0. Increasing the bound and calling fit again may find a better value.
+  warnings.warn(
+D1 fold 1: train cells 54 (1347 cycles), test cells 12 (4188 cycles), 56 s
+D1 fold 2: train cells 53 (1325 cycles), test cells 13 (4188 cycles), 50 s
+D1 fold 3: train cells 54 (1347 cycles), test cells 12 (4298 cycles), 65 s
+/usr/local/lib/python3.13/site-packages/sklearn/gaussian_process/kernels.py:455: ConvergenceWarning: The optimal value found for dimension 4 of parameter k1__k2__length_scale is close to the specified upper bound 100000.0. Increasing the bound and calling fit again may find a better value.
+  warnings.warn(
+D1 fold 4: train cells 52 (1297 cycles), test cells 14 (4740 cycles), 49 s
+D2 fold 0: train cells 45 (1125 cycles), test cells 10 (5740 cycles), 60 s
+D2 fold 1: train cells 43 (1075 cycles), test cells 12 (5805 cycles), 39 s
+/usr/local/lib/python3.13/site-packages/sklearn/gaussian_process/kernels.py:455: ConvergenceWarning: The optimal value found for dimension 3 of parameter k1__k2__length_scale is close to the specified upper bound 100000.0. Increasing the bound and calling fit again may find a better value.
+  warnings.warn(
+D2 fold 2: train cells 43 (1075 cycles), test cells 12 (5860 cycles), 35 s
+D2 fold 3: train cells 46 (1150 cycles), test cells 9 (4498 cycles), 52 s
+D2 fold 4: train cells 43 (1075 cycles), test cells 12 (5899 cycles), 35 s
+data model   MAE  RMSE  accuracy  FN_rate  FP_rate  FN_count  FP_count     n    F1  MAE_fold_sd  FN_rate_fold_sd  FP_rate_fold_sd  cover90  width90
+  D1 ridge 2.179 2.892     0.920    0.030    0.204       131      1208 22270 0.945        0.119            0.026            0.072      NaN      NaN
+  D1   xgb 1.121 1.629     0.956    0.027    0.085       341       393 22270 0.969        0.121            0.006            0.042    0.827    4.608
+  D1    gp 1.018 1.444     0.958    0.026    0.084       322       380 22270 0.970        0.081            0.007            0.038    0.858    3.821
+  D2 ridge 1.245 1.677     0.961    0.023    0.093       666       763 27802 0.975        0.250            0.011            0.054      NaN      NaN
+  D2   xgb 1.031 1.378     0.970    0.017    0.075       526       620 27802 0.981        0.137            0.012            0.043    0.834    3.660
+  D2    gp 1.010 1.338     0.970    0.017    0.072       528       600 27802 0.981        0.178            0.012            0.043    0.843    3.670

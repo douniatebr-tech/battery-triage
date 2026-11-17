@@ -1,0 +1,11 @@
+D1 fold 0: scale 1.71; 115 s
+D1 fold 1: scale 1.43; 109 s
+D1 fold 2: scale 1.47; 105 s
+D1 fold 3: scale 1.47; 109 s
+D1 fold 4: scale 1.31; 101 s
+D2 fold 0: scale 1.27; 105 s
+D2 fold 1: scale 1.24; 112 s
+D2 fold 2: scale 1.41; 112 s
+D2 fold 3: scale 1.31; 109 s
+D2 fold 4: scale 1.27; 112 s
+EXIT OK

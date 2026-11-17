@@ -1,0 +1,112 @@
+{
+ "D1": {
+  "gp": {
+   "MAE": 1.0176,
+   "RMSE": 1.4438,
+   "accuracy": 0.9576,
+   "FN_rate": 0.0256,
+   "FP_rate": 0.0839,
+   "FN_count": 322,
+   "FP_count": 380,
+   "n": 22270,
+   "F1": 0.9704,
+   "cover90_raw": 0.8585,
+   "cover90_cal": 0.9027,
+   "width90_cal": 4.6246
+  },
+  "xgb": {
+   "MAE": 1.1208,
+   "RMSE": 1.6292,
+   "accuracy": 0.9563,
+   "FN_rate": 0.0268,
+   "FP_rate": 0.0855,
+   "FN_count": 341,
+   "FP_count": 393,
+   "n": 22270,
+   "F1": 0.9694,
+   "cover90_raw": 0.8723,
+   "cover90_cal": 0.9132,
+   "width90_cal": 5.6132
+  },
+  "cnn": {
+   "MAE": 1.0068,
+   "RMSE": 1.4583,
+   "accuracy": 0.9553,
+   "FN_rate": 0.0275,
+   "FP_rate": 0.0874,
+   "FN_count": 326,
+   "FP_count": 324,
+   "n": 22270,
+   "F1": 0.9687,
+   "cover90_raw": 0.8444,
+   "cover90_cal": 0.9409,
+   "width90_cal": 5.0716
+  },
+  "xgb_all": {
+   "MAE": 1.2839,
+   "RMSE": 1.9016,
+   "accuracy": 0.9469,
+   "FN_rate": 0.0211,
+   "FP_rate": 0.1322,
+   "FN_count": 252,
+   "FP_count": 505,
+   "n": 22270,
+   "F1": 0.9633
+  }
+ },
+ "D2": {
+  "gp": {
+   "MAE": 1.0098,
+   "RMSE": 1.3375,
+   "accuracy": 0.9703,
+   "FN_rate": 0.0175,
+   "FP_rate": 0.0717,
+   "FN_count": 528,
+   "FP_count": 600,
+   "n": 27802,
+   "F1": 0.9809,
+   "cover90_raw": 0.8426,
+   "cover90_cal": 0.9024,
+   "width90_cal": 4.757
+  },
+  "xgb": {
+   "MAE": 1.0311,
+   "RMSE": 1.3783,
+   "accuracy": 0.9701,
+   "FN_rate": 0.0169,
+   "FP_rate": 0.0748,
+   "FN_count": 526,
+   "FP_count": 620,
+   "n": 27802,
+   "F1": 0.9807,
+   "cover90_raw": 0.8398,
+   "cover90_cal": 0.9099,
+   "width90_cal": 4.9076
+  },
+  "cnn": {
+   "MAE": 0.9716,
+   "RMSE": 1.3092,
+   "accuracy": 0.9706,
+   "FN_rate": 0.0158,
+   "FP_rate": 0.0764,
+   "FN_count": 509,
+   "FP_count": 631,
+   "n": 27802,
+   "F1": 0.9811,
+   "cover90_raw": 0.8595,
+   "cover90_cal": 0.9159,
+   "width90_cal": 4.5787
+  },
+  "xgb_all": {
+   "MAE": 1.102,
+   "RMSE": 1.4794,
+   "accuracy": 0.9709,
+   "FN_rate": 0.0149,
+   "FP_rate": 0.0781,
+   "FN_count": 475,
+   "FP_count": 642,
+   "n": 27802,
+   "F1": 0.9813
+  }
+ }
+}

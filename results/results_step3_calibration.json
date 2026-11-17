@@ -1,0 +1,74 @@
+{
+ "D1": {
+  "gp": {
+   "calibration": {
+    "cover90_raw": 0.8584773233662351,
+    "width90_raw": 3.821184545639264,
+    "brier_raw": 0.03386342414595575,
+    "cover90_calibrated": 0.9026736474584713,
+    "width90_calibrated": 4.624630430710312,
+    "brier_calibrated": 0.0340906194582034,
+    "scale_by_fold": [
+     1.264,
+     1.227,
+     1.119,
+     1.254,
+     1.182
+    ]
+   }
+  },
+  "xgb": {
+   "calibration": {
+    "cover90_raw": 0.8722776260373346,
+    "width90_raw": 4.607806136143873,
+    "brier_raw": 0.03498526582683023,
+    "cover90_calibrated": 0.913233877666302,
+    "width90_calibrated": 5.613191002383768,
+    "brier_calibrated": 0.035954803772580465,
+    "scale_by_fold": [
+     1.289,
+     1.242,
+     1.266,
+     1.184,
+     1.111
+    ]
+   }
+  }
+ },
+ "D2": {
+  "gp": {
+   "calibration": {
+    "cover90_raw": 0.8425711454502989,
+    "width90_raw": 3.669614497638017,
+    "brier_raw": 0.02232079359374921,
+    "cover90_calibrated": 0.9024187057711857,
+    "width90_calibrated": 4.756985273916653,
+    "brier_calibrated": 0.023606821986469552,
+    "scale_by_fold": [
+     1.391,
+     1.272,
+     1.217,
+     1.375,
+     1.254
+    ]
+   }
+  },
+  "xgb": {
+   "calibration": {
+    "cover90_raw": 0.8397523817836727,
+    "width90_raw": 3.6599142050709457,
+    "brier_raw": 0.022387762908519456,
+    "cover90_calibrated": 0.9099147972005295,
+    "width90_calibrated": 4.907608211073911,
+    "brier_calibrated": 0.02307127879908431,
+    "scale_by_fold": [
+     1.355,
+     1.307,
+     1.286,
+     1.453,
+     1.33
+    ]
+   }
+  }
+ }
+}
