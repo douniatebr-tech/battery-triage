@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this code or data, please cite the article and this repository."
+title: "Battery triage: second life, recycling or retest? Code, data extract and results"
+type: software
+authors:
+  - family-names: Tebr
+    given-names: Dounia
+    affiliation: "LI3A, Faculty of Sciences Dhar El Mahraz, Sidi Mohamed Ben Abdellah University, Fez, Morocco"
+  - family-names: Satauri
+    given-names: Imane
+    affiliation: "LI3A, Faculty of Sciences Dhar El Mahraz, Sidi Mohamed Ben Abdellah University, Fez, Morocco"
+  - family-names: El Hammoumi
+    given-names: Zeineb
+    affiliation: "LI3A, Faculty of Sciences Dhar El Mahraz, Sidi Mohamed Ben Abdellah University, Fez, Morocco"
+  - family-names: Charkaoui
+    given-names: Youssef
+    affiliation: "LI3A, Faculty of Sciences Dhar El Mahraz, Sidi Mohamed Ben Abdellah University, Fez, Morocco"
+license: MIT
+version: "1.0.0"
+date-released: "2026-11-17"
+keywords:
+  - battery second life
+  - state of health
+  - uncertainty quantification
+  - battery passport
+  - reverse supply chain

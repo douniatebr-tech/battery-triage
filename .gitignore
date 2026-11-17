@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+data/*.pkl
+data/results_*
+data/salinas/
+.DS_Store
